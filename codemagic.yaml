@@ -1,0 +1,37 @@
+workflows:
+  android-workflow:
+    name: Android Build Workflow
+    environment:
+      android_signing:
+        - keystore_reference
+      vars:
+        PACKAGE_NAME: "com.example.miningapp"
+    scripts:
+      - name: Set up JDK
+        script: |
+          echo "Setting up JDK"
+          java --version
+
+      - name: Build APK
+        script: |
+          echo "Building APK"
+          ./gradlew assembleRelease
+
+      - name: Sign APK
+        script: |
+          echo "Signing APK"
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore $CM_KEYSTORE_PATH app/build/outputs/apk/release/app-release-unsigned.apk alias_name
+
+      - name: Generate final APK
+        script: |
+          echo "Generating final APK"
+          zipalign -v 4 app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/app-release.apk
+
+    artifacts:
+      - app/build/outputs/apk/release/app-release.apk
+
+    publishing:
+      email:
+        recipients:
+          - "konqurenz@hotmail.com"
